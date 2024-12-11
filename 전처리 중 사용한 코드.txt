@@ -1,0 +1,667 @@
+file<-read_xlsx("final_data.xlsx")
+
+for (i in 1:nrow(file)) {
+  if (file$Gender[i] == "Male") {
+    file$Gender_num[i] <- "0"
+  } else if (file$Gender[i] == "Female") {
+    file$Gender_num[i] <- "1"
+  } else {
+    file$Gender_num[i] <- "3"
+  }
+}
+
+for (i in 1:nrow(file)) {
+  if (file$Location[i] == "Rural") {
+    file$Location_num[i] <- "0"
+  } else if (file$Location[i] == "Suburban") {
+    file$Location_num[i] <- "1"
+  } else if (file$Location[i] == "Urban") {
+    file$Location_num[i] <- "2"
+  } else {
+    file$Location_num[i] <- "3"
+  }
+}
+
+for (i in 1:nrow(file)) {
+  if (file$Ad.Type[i] == "Banner") {
+    file$Ad.Type_num[i] <- "0"
+  } else if (file$Ad.Type[i] == "Native") {
+    file$Ad.Type_num[i] <- "1"
+  } else if (file$Ad.Type[i] == "Text") {
+    file$Ad.Type_num[i] <- "2"
+  } else if (file$Ad.Type[i] == "Video") {
+    file$Ad.Type_num[i] <- "3"
+  } else {
+    file$Ad.Type_num[i] <- "4"
+  }
+}
+
+for (i in 1:nrow(file)) {
+  if (file$Ad.Topic[i] == "Fashion") {
+    file$Ad.Topic_num[i] <- "0"
+  } else if (file$Ad.Topic[i] == "Finance") {
+    file$Ad.Topic_num[i] <- "1"
+  } else if (file$Ad.Topic[i] == "Food") {
+    file$Ad.Topic_num[i] <- "2"
+  } else if (file$Ad.Topic[i] == "Health") {
+    file$Ad.Topic_num[i] <- "3"
+  } else if (file$Ad.Topic[i] == "Technology") {
+    file$Ad.Topic_num[i] <- "4"
+  } else if (file$Ad.Topic[i] == "Travel") {
+    file$Ad.Topic_num[i] <- "5"
+  } else {
+    file$Ad.Topic_num[i] <- "6"
+  }
+}
+
+for (i in 1:nrow(file)) {
+  if (file$Ad.Placement[i] == "Search Engine") {
+    file$Ad.Placement_num[i] <- "0"
+  } else if (file$Ad.Placement[i] == "Social Media") {
+    file$Ad.Placement_num[i] <- "1"
+  } else if (file$Ad.Placement[i] == "Website") {
+    file$Ad.Placement_num[i] <- "2"
+  } else {
+    file$Ad.Placement_num[i] <- "3"
+  }
+}
+
+n<-table(file$Ad.Placement_num)
+n
+
+
+
+write_xlsx(file, "final_data_withN.xlsx")
+data<-file[,c(1,11,3,12,13,14,15,8,9,10)]
+colnames(file)
+write_xlsx(data, "final_data_onlyN.xlsx")
+
+head_final_data<-file[1:100,]
+table(head_final_data$Location)
+table(head_final_data$Ad.Type)
+table(head_final_data$Ad.Topic)
+table(head_final_data$Ad.Placement)
+write_xlsx(head_final_data, "head_final_data.xlsx")
+
+table(file$Clicks)
+rownum <- which(file$Clicks > 7)
+rownum
+data_cleaned <- file[-rownum, ]
+write_xlsx(data_cleaned, "cleaned_data.xlsx")
+cleaned_data<-read_xlsx("cleaned_data.xlsx")
+table(cleaned_data$Clicks)
+
+income<-cleaned_data$Income
+boxplot(income, main = "Income Distribution", ylab = "Income", col = "lightblue")
+outliers <- boxplot.stats(income)$out
+print(outliers)
+
+
+
+mean_income <- mean(income[!(income %in% outliers)], na.rm = TRUE)
+# 이상값을 평균으로 대체
+income_adjusted <- ifelse(income %in% outliers, mean_income, income)
+print(income_adjusted)
+# 데이터 프레임의 Income 열 업데이트
+cleaned_data$Income <- ifelse(cleaned_data$Income %in% outliers, mean_income, cleaned_data$Income)
+table(cleaned_data$Age)
+negative_income_rows <- which(cleaned_data$Income < 0)
+# 음수 값을 가지는 행 번호 출력
+print(negative_income_rows)
+# 음수 값을 가지는 행 삭제
+cleaned_data <- cleaned_data[-negative_income_rows, ]
+outlier_rows <- which(cleaned_data$Income %in% outliers)
+# 이상값이 포함된 행 번호 출력
+print(outlier_rows)
+# 이상값이 포함된 행 삭제
+cleaned_data <- cleaned_data[-outlier_rows, ]
+max(cleaned_data$Income)
+min(cleaned_data$Income)
+table(cleaned_data$Clicks)
+income_breaks <- c(0, 5000, 10000, 20000, 30000, 40000, 50000, 60000, 70000, 80000, 90000, 1000000000)
+
+# 구간에 따라 범주형 데이터로 변환
+income_groups <- cut(income, breaks = income_breaks, right = TRUE, include.lowest = TRUE)
+
+# 각 구간의 빈도 계산
+income_distribution <- table(income_groups)
+
+# 결과 출력
+print(income_distribution)
+
+min_value <- 5e+03  # 최소 값
+max_value <- 9e+04  # 최대 값
+
+# 최대값 및 최소값을 벗어난 행 번호 추출
+out_of_range_rows <- which(cleaned_data$Income < min_value | cleaned_data$Income > max_value)
+
+# 해당 행 번호 출력
+print(out_of_range_rows)
+
+# 해당 행 번호를 가진 행 삭제
+data <- cleaned_data[-out_of_range_rows, ]
+
+
+
+
+
+new_income<-data$Income
+boxplot(new_income, main = "New_Income Distribution", ylab = "Income", col = "lightblue")
+new_outliers <- boxplot.stats(new_income)$out
+print(new_outliers)
+
+new_income_breaks <- c(0, 10000, 15000, 20000, 25000, 30000, 35000, 40000, 45000, 50000, 55000, 60000, 65000, 700000, 75000, 80000, 85000, 90000, 100000)
+
+# 구간에 따라 범주형 데이터로 변환
+new_income_groups <- cut(new_income, breaks = new_income_breaks, right = TRUE, include.lowest = TRUE)
+
+# 각 구간의 빈도 계산
+new_income_distribution <- table(new_income_groups)
+
+# 결과 출력
+print(new_income_distribution)
+max(data$Income)
+min(data$Income)
+table(data$Age)
+table(data$Clicks)
+
+age_above_70_rows <- which(data$Age >= 70)
+
+# 해당 행 번호 출력 (Age가 70 이상인 행 번호)
+print(age_above_70_rows)
+
+# 해당 행 번호에 해당하는 행 삭제
+new_data <- data[-age_above_70_rows, ]
+table(new_data$Age)
+
+age_above_20_rows <- which(new_data$Age < 20)
+last_data <- new_data[-age_above_20_rows, ]
+age_above_60_rows <- which(data1$Age > 60)
+
+last_data<- data[-age_above_rows, ]
+table(last_data$Age)
+
+data1<-data[-age_above_20_rows, ]
+data2<-data1[-age_above_70_rows, ]
+table(data1$Age)
+table(data1$Clicks)
+write_xlsx(last_data, "1차 전처리 완료.xlsx")
+
+firstprocessdata<-read_excel("1차 전처리 완료.xlsx")
+table(firstprocessdata$Age)
+table(firstprocessdata$Gender)
+table(firstprocessdata$Location)
+table(firstprocessdata$Ad.Type)
+table(firstprocessdata$Ad.Topic)
+table(firstprocessdata$Ad.Placement)
+table(firstprocessdata$Clicks)
+max(firstprocessdata$Income)
+min(firstprocessdata$Income)
+
+
+
+table(final_data$Location_num)
+write.csv(final_data, "data.csv")
+
+write_xlsx(final_data, "M_L_data.xlsx")
+write.csv(final_data, "M_L_data.csv")
+
+data_only_NUM<-final_data[,c(1,3,11,12,13,14,15,8,9,10)]
+
+orginal_data<-final_data[,1:10]
+OrginalDataHead<-orginal_data[1:100,]
+
+write.csv(orginal_data,"unprocessed_mldata.csv")
+write_xlsx(orginal_data,"unprocessed_mldata.xlsx")
+write_xlsx(OrginalDataHead,"OrginalDataHead.xlsx")
+write.csv(OrginalDataHead,"OrginalDataHead.csv")
+
+
+
+data<-read_xlsx("M.L_data.xlsx")
+write_xlsx(data,"xgboostdata.xlsx")
+
+result <- table(data$Ad.Type, data$Ad.Topic, data$Ad.Placement)
+print(result)
+
+
+
+
+install.packages("dplyr")
+library(dplyr)
+
+user_data<-firstprocessdata[,1:4]
+user_data_num<-firstprocessdata[,c(1,11,3,12)]
+ad_data<-firstprocessdata[,5:7]
+ad_data_num<-firstprocessdata[,13:15]
+
+
+data_with_row_number <- ad_data_num %>%
+  mutate(row_num = row_number()) 
+# 그룹화하여 동일한 값을 가진 행 출력
+result <- data_with_row_number %>%
+  group_by(across(c(Ad.Type_num, Ad.Topic_num, Ad.Placement_num))) %>%  # 모든 열을 기준으로 그룹화
+  filter(n() > 1) %>%                 # 동일한 값을 가진 행만 필터링
+  ungroup() %>%
+  select(row_num)
+# 결과 확인
+print(result)
+
+distinct_rows <- distinct(ad_data_num)
+
+# 중복을 제거한 후 결과 출력
+print(distinct_rows)
+
+# 전체 행 수와 중복 제거된 행 수 비교
+cat("전체 행 수:", nrow(data), "\n")
+cat("중복 제거 후 행 수:", nrow(distinct_rows), "\n")
+colnames(distinct_rows)
+table(ad_data_num$Ad.Type_num)
+table(ad_data_num$Ad.Topic_num)
+table(ad_data_num$Ad.Placement_num)
+
+write_xlsx(ad_data_num,"adData.xlsx")
+
+
+table(data$Ad.Type)
+
+table(data$Ad.Placement)
+
+x<-data.frame(data,new_ad_data_num)
+
+lable_data<-x[,c(1,2,11,3,4,12,16,5,13,6,14,7,15,8,9,10)]
+write_xlsx(lable_data,"preprocessing_data.xlsx")
+xlabel_data<-lable_data[]
+
+
+table(ad_data_num$Ad.Type_num)
+table(ad_data_num$Ad.Topic_num)
+table(ad_data_num$Ad.Placement_num)
+table(ad_data_num$Ad.Id)
+sum(table(ad_data_num$Ad.Id))
+ad_id<-ad_data_num[,4]
+new_ad_data_num<-ad_data_num[,c(4,1,2,3)]
+
+for (i in 1:nrow(ad_data_num)) {
+  if (ad_data_num$Ad.Type_num[i] == 3 && ad_data_num$Ad.Topic_num[i] == 5 && ad_data_num$Ad.Placement_num[i] == 0) {
+    ad_data_num$Ad.Id[i] <- 1
+  } else if ((ad_data_num$Ad.Type_num[i] == 2 && ad_data_num$Ad.Topic_num[i] == 2 && ad_data_num$Ad.Placement_num[i] == 1)){
+    ad_data_num$Ad.Id[i] <- 2
+  } else if ((ad_data_num$Ad.Type_num[i] == 3 && ad_data_num$Ad.Topic_num[i] == 3 && ad_data_num$Ad.Placement_num[i] == 1)){
+    ad_data_num$Ad.Id[i] <- 3
+  } else if ((ad_data_num$Ad.Type_num[i] == 3 && ad_data_num$Ad.Topic_num[i] == 2 && ad_data_num$Ad.Placement_num[i] == 0)){
+    ad_data_num$Ad.Id[i] <- 4
+  } else if ((ad_data_num$Ad.Type_num[i] == 0 && ad_data_num$Ad.Topic_num[i] == 2 && ad_data_num$Ad.Placement_num[i] == 0)){
+    ad_data_num$Ad.Id[i] <- 5
+  } else if ((ad_data_num$Ad.Type_num[i] == 3 && ad_data_num$Ad.Topic_num[i] == 3 && ad_data_num$Ad.Placement_num[i] == 0)){
+    ad_data_num$Ad.Id[i] <- 6
+  } else if ((ad_data_num$Ad.Type_num[i] == 1 && ad_data_num$Ad.Topic_num[i] == 0 && ad_data_num$Ad.Placement_num[i] == 0)){
+    ad_data_num$Ad.Id[i] <- 7
+  } else if ((ad_data_num$Ad.Type_num[i] == 1 && ad_data_num$Ad.Topic_num[i] == 3 && ad_data_num$Ad.Placement_num[i] == 0)){
+    ad_data_num$Ad.Id[i] <- 8
+  } else if ((ad_data_num$Ad.Type_num[i] == 3 && ad_data_num$Ad.Topic_num[i] == 4 && ad_data_num$Ad.Placement_num[i] == 2)){
+    ad_data_num$Ad.Id[i] <- 9
+  } else if ((ad_data_num$Ad.Type_num[i] == 0 && ad_data_num$Ad.Topic_num[i] == 2 && ad_data_num$Ad.Placement_num[i] == 2)){
+    ad_data_num$Ad.Id[i] <- 10
+  } else if ((ad_data_num$Ad.Type_num[i] == 3 && ad_data_num$Ad.Topic_num[i] == 4 && ad_data_num$Ad.Placement_num[i] == 1)){
+    ad_data_num$Ad.Id[i] <- 11
+  } else if ((ad_data_num$Ad.Type_num[i] == 1 && ad_data_num$Ad.Topic_num[i] == 2 && ad_data_num$Ad.Placement_num[i] == 2)){
+    ad_data_num$Ad.Id[i] <- 12
+  } else if ((ad_data_num$Ad.Type_num[i] == 0 && ad_data_num$Ad.Topic_num[i] == 5 && ad_data_num$Ad.Placement_num[i] == 1)){
+    ad_data_num$Ad.Id[i] <- 13
+  } else if ((ad_data_num$Ad.Type_num[i] == 2 && ad_data_num$Ad.Topic_num[i] == 3 && ad_data_num$Ad.Placement_num[i] == 0)){
+    ad_data_num$Ad.Id[i] <- 14
+  } else if ((ad_data_num$Ad.Type_num[i] == 3 && ad_data_num$Ad.Topic_num[i] == 5 && ad_data_num$Ad.Placement_num[i] == 2)){
+    ad_data_num$Ad.Id[i] <- 15
+  } else if ((ad_data_num$Ad.Type_num[i] == 3 && ad_data_num$Ad.Topic_num[i] == 3 && ad_data_num$Ad.Placement_num[i] == 2)){
+    ad_data_num$Ad.Id[i] <- 16
+  } else if ((ad_data_num$Ad.Type_num[i] == 2 && ad_data_num$Ad.Topic_num[i] == 1 && ad_data_num$Ad.Placement_num[i] == 0)){
+    ad_data_num$Ad.Id[i] <- 17
+  } else if ((ad_data_num$Ad.Type_num[i] == 1 && ad_data_num$Ad.Topic_num[i] == 5 && ad_data_num$Ad.Placement_num[i] == 1)){
+    ad_data_num$Ad.Id[i] <- 18
+  } else if ((ad_data_num$Ad.Type_num[i] == 2 && ad_data_num$Ad.Topic_num[i] == 5 && ad_data_num$Ad.Placement_num[i] == 2)){
+    ad_data_num$Ad.Id[i] <- 19
+  } else if ((ad_data_num$Ad.Type_num[i] == 2 && ad_data_num$Ad.Topic_num[i] == 0 && ad_data_num$Ad.Placement_num[i] == 1)){
+    ad_data_num$Ad.Id[i] <- 20
+  } else if ((ad_data_num$Ad.Type_num[i] == 1 && ad_data_num$Ad.Topic_num[i] == 1 && ad_data_num$Ad.Placement_num[i] == 0)){
+    ad_data_num$Ad.Id[i] <- 21
+  } else if ((ad_data_num$Ad.Type_num[i] == 1 && ad_data_num$Ad.Topic_num[i] == 4 && ad_data_num$Ad.Placement_num[i] == 0)){
+    ad_data_num$Ad.Id[i] <- 22
+  } else if ((ad_data_num$Ad.Type_num[i] == 0 && ad_data_num$Ad.Topic_num[i] == 0 && ad_data_num$Ad.Placement_num[i] == 1)){
+    ad_data_num$Ad.Id[i] <- 23
+  } else if ((ad_data_num$Ad.Type_num[i] == 0 && ad_data_num$Ad.Topic_num[i] == 5 && ad_data_num$Ad.Placement_num[i] == 0)){
+    ad_data_num$Ad.Id[i] <- 24
+  } else if ((ad_data_num$Ad.Type_num[i] == 1 && ad_data_num$Ad.Topic_num[i] == 1 && ad_data_num$Ad.Placement_num[i] == 2)){
+    ad_data_num$Ad.Id[i] <- 25
+  } else if ((ad_data_num$Ad.Type_num[i] == 0 && ad_data_num$Ad.Topic_num[i] == 5 && ad_data_num$Ad.Placement_num[i] == 2)){
+    ad_data_num$Ad.Id[i] <- 26
+  } else if ((ad_data_num$Ad.Type_num[i] == 3 && ad_data_num$Ad.Topic_num[i] == 2 && ad_data_num$Ad.Placement_num[i] == 1)){
+    ad_data_num$Ad.Id[i] <- 27
+  } else if ((ad_data_num$Ad.Type_num[i] == 1 && ad_data_num$Ad.Topic_num[i] == 4 && ad_data_num$Ad.Placement_num[i] == 1)){
+    ad_data_num$Ad.Id[i] <- 28
+  } else if ((ad_data_num$Ad.Type_num[i] == 3 && ad_data_num$Ad.Topic_num[i] == 4 && ad_data_num$Ad.Placement_num[i] == 0)){
+    ad_data_num$Ad.Id[i] <- 29
+  } else if ((ad_data_num$Ad.Type_num[i] == 0 && ad_data_num$Ad.Topic_num[i] == 0 && ad_data_num$Ad.Placement_num[i] == 0)){
+    ad_data_num$Ad.Id[i] <- 30
+  } else if ((ad_data_num$Ad.Type_num[i] == 3 && ad_data_num$Ad.Topic_num[i] == 0 && ad_data_num$Ad.Placement_num[i] == 1)){
+    ad_data_num$Ad.Id[i] <- 31
+  } else if ((ad_data_num$Ad.Type_num[i] == 3 && ad_data_num$Ad.Topic_num[i] == 1 && ad_data_num$Ad.Placement_num[i] == 0)){
+    ad_data_num$Ad.Id[i] <- 32
+  } else if ((ad_data_num$Ad.Type_num[i] == 0 && ad_data_num$Ad.Topic_num[i] == 3 && ad_data_num$Ad.Placement_num[i] == 2)){
+    ad_data_num$Ad.Id[i] <- 33
+  } else if ((ad_data_num$Ad.Type_num[i] == 3 && ad_data_num$Ad.Topic_num[i] == 0 && ad_data_num$Ad.Placement_num[i] == 2)){
+    ad_data_num$Ad.Id[i] <- 34
+  } else if ((ad_data_num$Ad.Type_num[i] == 2 && ad_data_num$Ad.Topic_num[i] == 1 && ad_data_num$Ad.Placement_num[i] == 2)){
+    ad_data_num$Ad.Id[i] <- 35
+  } else if ((ad_data_num$Ad.Type_num[i] == 1 && ad_data_num$Ad.Topic_num[i] == 3 && ad_data_num$Ad.Placement_num[i] == 2)){
+    ad_data_num$Ad.Id[i] <- 36
+  } else if ((ad_data_num$Ad.Type_num[i] == 2 && ad_data_num$Ad.Topic_num[i] == 0 && ad_data_num$Ad.Placement_num[i] == 2)){
+    ad_data_num$Ad.Id[i] <- 37
+  } else if ((ad_data_num$Ad.Type_num[i] == 0 && ad_data_num$Ad.Topic_num[i] == 4 && ad_data_num$Ad.Placement_num[i] == 2)){
+    ad_data_num$Ad.Id[i] <- 38
+  } else if ((ad_data_num$Ad.Type_num[i] == 2 && ad_data_num$Ad.Topic_num[i] == 3 && ad_data_num$Ad.Placement_num[i] == 1)){
+    ad_data_num$Ad.Id[i] <- 39
+  } else if ((ad_data_num$Ad.Type_num[i] == 0 && ad_data_num$Ad.Topic_num[i] == 2 && ad_data_num$Ad.Placement_num[i] == 1)){
+    ad_data_num$Ad.Id[i] <- 40
+  } else if ((ad_data_num$Ad.Type_num[i] == 1 && ad_data_num$Ad.Topic_num[i] == 5 && ad_data_num$Ad.Placement_num[i] == 0)){
+    ad_data_num$Ad.Id[i] <- 41
+  } else if ((ad_data_num$Ad.Type_num[i] == 1 && ad_data_num$Ad.Topic_num[i] == 2 && ad_data_num$Ad.Placement_num[i] == 0)){
+    ad_data_num$Ad.Id[i] <- 42
+  } else if ((ad_data_num$Ad.Type_num[i] == 2 && ad_data_num$Ad.Topic_num[i] == 4 && ad_data_num$Ad.Placement_num[i] == 0)){
+    ad_data_num$Ad.Id[i] <- 43
+  } else if ((ad_data_num$Ad.Type_num[i] == 0 && ad_data_num$Ad.Topic_num[i] == 3 && ad_data_num$Ad.Placement_num[i] == 0)){
+    ad_data_num$Ad.Id[i] <- 44
+  } else if ((ad_data_num$Ad.Type_num[i] == 2 && ad_data_num$Ad.Topic_num[i] == 4 && ad_data_num$Ad.Placement_num[i] == 2)){
+    ad_data_num$Ad.Id[i] <- 45
+  } else if ((ad_data_num$Ad.Type_num[i] == 3 && ad_data_num$Ad.Topic_num[i] == 1 && ad_data_num$Ad.Placement_num[i] == 2)){
+    ad_data_num$Ad.Id[i] <- 46
+  } else if ((ad_data_num$Ad.Type_num[i] == 3 && ad_data_num$Ad.Topic_num[i] == 0 && ad_data_num$Ad.Placement_num[i] == 0)){
+    ad_data_num$Ad.Id[i] <- 47
+  } else if ((ad_data_num$Ad.Type_num[i] == 1 && ad_data_num$Ad.Topic_num[i] == 0 && ad_data_num$Ad.Placement_num[i] == 1)){
+    ad_data_num$Ad.Id[i] <- 48
+  } else if ((ad_data_num$Ad.Type_num[i] == 0 && ad_data_num$Ad.Topic_num[i] == 1 && ad_data_num$Ad.Placement_num[i] == 0)){
+    ad_data_num$Ad.Id[i] <- 49
+  } else if ((ad_data_num$Ad.Type_num[i] == 0 && ad_data_num$Ad.Topic_num[i] == 1 && ad_data_num$Ad.Placement_num[i] == 2)){
+    ad_data_num$Ad.Id[i] <- 50
+  } else if ((ad_data_num$Ad.Type_num[i] == 1 && ad_data_num$Ad.Topic_num[i] == 0 && ad_data_num$Ad.Placement_num[i] == 2)){
+    ad_data_num$Ad.Id[i] <- 51
+  } else if ((ad_data_num$Ad.Type_num[i] == 2 && ad_data_num$Ad.Topic_num[i] == 2 && ad_data_num$Ad.Placement_num[i] == 2)){
+    ad_data_num$Ad.Id[i] <- 52
+  } else if ((ad_data_num$Ad.Type_num[i] == 3 && ad_data_num$Ad.Topic_num[i] == 5 && ad_data_num$Ad.Placement_num[i] == 1)){
+    ad_data_num$Ad.Id[i] <- 53
+  } else if ((ad_data_num$Ad.Type_num[i] == 1 && ad_data_num$Ad.Topic_num[i] == 4 && ad_data_num$Ad.Placement_num[i] == 2)){
+    ad_data_num$Ad.Id[i] <- 54
+  } else if ((ad_data_num$Ad.Type_num[i] == 2 && ad_data_num$Ad.Topic_num[i] == 3 && ad_data_num$Ad.Placement_num[i] == 2)){
+    ad_data_num$Ad.Id[i] <- 55
+  } else if ((ad_data_num$Ad.Type_num[i] == 1 && ad_data_num$Ad.Topic_num[i] == 3 && ad_data_num$Ad.Placement_num[i] == 1)){
+    ad_data_num$Ad.Id[i] <- 56
+  } else if ((ad_data_num$Ad.Type_num[i] == 3 && ad_data_num$Ad.Topic_num[i] == 1 && ad_data_num$Ad.Placement_num[i] == 1)){
+    ad_data_num$Ad.Id[i] <- 57
+  } else if ((ad_data_num$Ad.Type_num[i] == 0 && ad_data_num$Ad.Topic_num[i] == 4 && ad_data_num$Ad.Placement_num[i] == 1)){
+    ad_data_num$Ad.Id[i] <- 58
+  } else if ((ad_data_num$Ad.Type_num[i] == 3 && ad_data_num$Ad.Topic_num[i] == 2 && ad_data_num$Ad.Placement_num[i] == 2)){
+    ad_data_num$Ad.Id[i] <- 59
+  } else if ((ad_data_num$Ad.Type_num[i] == 1 && ad_data_num$Ad.Topic_num[i] == 5 && ad_data_num$Ad.Placement_num[i] == 2)){
+    ad_data_num$Ad.Id[i] <- 60
+  } else if ((ad_data_num$Ad.Type_num[i] == 0 && ad_data_num$Ad.Topic_num[i] == 0 && ad_data_num$Ad.Placement_num[i] == 2)){
+    ad_data_num$Ad.Id[i] <- 61
+  } else if ((ad_data_num$Ad.Type_num[i] == 2 && ad_data_num$Ad.Topic_num[i] == 1 && ad_data_num$Ad.Placement_num[i] == 1)){
+    ad_data_num$Ad.Id[i] <- 62
+  } else if ((ad_data_num$Ad.Type_num[i] == 2 && ad_data_num$Ad.Topic_num[i] == 2 && ad_data_num$Ad.Placement_num[i] == 0)){
+    ad_data_num$Ad.Id[i] <- 63
+  } else if ((ad_data_num$Ad.Type_num[i] == 2 && ad_data_num$Ad.Topic_num[i] == 5 && ad_data_num$Ad.Placement_num[i] == 0)){
+    ad_data_num$Ad.Id[i] <- 64
+  } else if ((ad_data_num$Ad.Type_num[i] == 2 && ad_data_num$Ad.Topic_num[i] == 4 && ad_data_num$Ad.Placement_num[i] == 1)){
+    ad_data_num$Ad.Id[i] <- 65
+  } else if ((ad_data_num$Ad.Type_num[i] == 0 && ad_data_num$Ad.Topic_num[i] == 4 && ad_data_num$Ad.Placement_num[i] == 0)){
+    ad_data_num$Ad.Id[i] <- 66
+  } else if ((ad_data_num$Ad.Type_num[i] == 2 && ad_data_num$Ad.Topic_num[i] == 5 && ad_data_num$Ad.Placement_num[i] == 1)){
+    ad_data_num$Ad.Id[i] <- 67
+  } else if ((ad_data_num$Ad.Type_num[i] == 0 && ad_data_num$Ad.Topic_num[i] == 3 && ad_data_num$Ad.Placement_num[i] == 1)){
+    ad_data_num$Ad.Id[i] <- 68
+  } else if ((ad_data_num$Ad.Type_num[i] == 0 && ad_data_num$Ad.Topic_num[i] == 1 && ad_data_num$Ad.Placement_num[i] == 1)){
+    ad_data_num$Ad.Id[i] <- 69
+  } else if ((ad_data_num$Ad.Type_num[i] == 2 && ad_data_num$Ad.Topic_num[i] == 0 && ad_data_num$Ad.Placement_num[i] == 0)){
+    ad_data_num$Ad.Id[i] <- 70
+  } else if ((ad_data_num$Ad.Type_num[i] == 1 && ad_data_num$Ad.Topic_num[i] == 2 && ad_data_num$Ad.Placement_num[i] == 1)){
+    ad_data_num$Ad.Id[i] <- 71
+  } else if ((ad_data_num$Ad.Type_num[i] == 1 && ad_data_num$Ad.Topic_num[i] == 1 && ad_data_num$Ad.Placement_num[i] == 1)){
+    ad_data_num$Ad.Id[i] <- 72
+  } else {
+    ad_data_num$Ad.Id[i] <- "error"
+  }
+}
+
+table(ad_data_num$Ad.Id)
+
+ad_data_num1<-ad_data_num[,c(4,1,2,3)]
+ad_id_col<-ad_data_num1[,1]
+
+tlqkf<-data.frame(firstprocessdata, ad_id_col)
+finish<-tlqkf[,c(1,2,3,4,16,5:15)]
+max(finish$Income)
+min(finish$Income)
+write_xlsx(finish,"머신러닝 기말과제 데이터.xlsx")
+distinct(user_data_num)
+
+
+ex<-read_xlsx("preprocessing_data.xlsx")
+# 예시 데이터 생성 (유저 데이터와 광고 데이터)
+udata <- ex[,1:6]
+adata <- ex[,7:13]
+cdata<-ex[,14:16]
+full_data <- data.frame()
+
+# 원하는 만큼 반복하기 (예시: ex의 행 수만큼 반복)
+for (i in 1:nrow(ex)) {
+  # 유저 데이터에서 랜덤 행 번호 뽑기
+  user_sample <- udata[sample(nrow(udata), 1), ]  # udata 데이터에서 1개의 랜덤 행을 선택
+  
+  # 광고 데이터에서 랜덤 행 번호 뽑기
+  ad_sample <- adata[sample(nrow(adata), 1), ]  # adata 데이터에서 1개의 랜덤 행을 선택
+  
+  # cdata에서 랜덤 행 번호 뽑기
+  c_sample <- cdata[sample(nrow(cdata), 1), ]  # cdata 데이터에서 1개의 랜덤 행을 선택
+  
+  # 유저 데이터, 광고 데이터, cdata 합치기
+  combined_row <- cbind(user_sample, ad_sample, c_sample)
+  
+  # 전체 데이터에 새로운 행 추가
+  full_data <- rbind(full_data, combined_row)
+}
+full_data1 <- data.frame()
+rownum<-2000
+for (i in 1:2000) {
+  # 유저 데이터에서 랜덤 행 번호 뽑기
+  user_sample <- udata[sample(nrow(udata), 1), ]  # udata 데이터에서 1개의 랜덤 행을 선택
+  
+  # 광고 데이터에서 랜덤 행 번호 뽑기
+  ad_sample <- adata[sample(nrow(adata), 1), ]  # adata 데이터에서 1개의 랜덤 행을 선택
+  
+  # cdata에서 랜덤 행 번호 뽑기
+  c_sample <- cdata[sample(nrow(cdata), 1), ]  # cdata 데이터에서 1개의 랜덤 행을 선택
+  
+  # 유저 데이터, 광고 데이터, cdata 합치기
+  combined_row <- cbind(user_sample, ad_sample, c_sample)
+  
+  # 전체 데이터에 새로운 행 추가
+  full_data1 <- rbind(full_data1, combined_row)
+}
+
+sampled<-rbind(ex,full_data)
+sampled<-rbind(sampled, full_data1)
+# 결과 출력
+write_xlsx(sampled,"확장 데이터.xlsx")
+sampled<-read_xlsx("확장 데이터.xlsx")
+max(sampled$Income)
+min(sampled$Income)
+
+max(sampled$CTR)
+min(sampled$CTR)
+sum(table(sampled$Age))
+
+age_above_55_rows <- which(sampled$Age >= 56)
+sampled <- sampled[-age_above_55_rows, ]
+samplex<-sampled[,1:6]
+distinct(samplex)
+write_xlsx(sampled,"확장 데이터2.xlsx")
+
+
+
+
+
+
+
+sorted_data <- sampled[order(sampled$Clicks), ]
+
+# 2. 중앙값에 해당하는 데이터 인덱스 계산
+mid_index <- floor(nrow(sorted_data) / 2) + 1  # 중앙값 인덱스 (홀수일 때 중앙값)
+
+# 3. 중앙값을 기준으로 앞뒤로 15개씩 뽑아 총 30개 데이터 선택
+start_index <- max(1, mid_index - 15)  # 중앙값 기준으로 15개 전부터 시작
+end_index <- min(nrow(sorted_data), mid_index + 14)  # 중앙값 기준으로 15개 후까지 포함
+
+# 4. 중앙에 해당하는 30개 데이터 뽑기
+central_data <- sorted_data[start_index:end_index, ]
+
+# 결과 출력
+print(central_data)
+table(central_data$Age)
+
+age_30 <- which(sampled$Age >= 30 & sampled$Age <40)
+age30data <- sampled[age_30, ]
+table(age30data$Age)
+sample30data <- age30data[sample(nrow(age30data), 1), ]
+sample31data <- age30data[sample(nrow(age30data), 1), ]
+sample32data <- age30data[sample(nrow(age30data), 1), ]
+sample33data <- age30data[sample(nrow(age30data), 1), ]
+space <- data.frame()
+for (i in 1:228) {
+  # 유저 데이터에서 랜덤 행 번호 뽑기
+  sample30data <- age30data[sample(nrow(age30data), 1), ]
+  sample31data <- age30data[sample(nrow(age30data), 1), ]
+  # 전체 데이터에 새로운 행 추가
+  space <- rbind(sample30data, sample31data)
+  sampled <- rbind(sampled, space)
+}
+table(sampled$Age)
+
+
+set.seed(123)  # 랜덤 시드 설정 (재현 가능성을 위해)
+
+# 데이터프레임 행 순서를 랜덤으로 섞기
+randomized_data <- sampled[sample(nrow(sampled)), ]
+
+# 결과 확인
+head(randomized_data)
+
+table(randomized_data$Age)
+write_xlsx(randomized_data,"samplemldata.xlsx")
+table(randomized_data$Clicks)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+tlqkf<-read_xlsx("preprocessing_data.xlsx")
+table(tlqkf$Clicks)
+age_above_50_rows <- which(tlqkf$Age >= 50)
+tlqkf <- tlqkf[-age_above_50_rows, ]
+tlqkf<- tlqkf[,-c(3, 6, 9, 11, 13)]
+tlqkf<- tlqkf[,-c(10, 11)]
+tlqkf<- tlqkf[,-3]
+tlqkfu<-tlqkf[,1:6]
+distinct(tlqkfu)
+table(tlqkf$Age)
+
+sum(table(tlqkf$Age))
+clicks_0_rows <- which(tlqkf$Clicks < 2)
+effect0<-tlqkf[clicks_0_rows,]
+table(effect0$Age)
+table(effect0$Gender)
+table(effect0$Location)
+table(effect0$Ad.Id)
+table(effect0$Ad.Type)
+table(effect0$Ad.Topic)
+table(effect0$Ad.Placement)
+
+effect0adid<-c(65,31,10,35,47,48,5,58,65,70)
+Rural,suburban,urban
+
+distinct(effect0)
+print(colnames(effect0))
+
+
+
+
+# 새로운 데이터 프레임 생성
+desired_rows <- 424
+ricd_data <- effect0
+ricd_data <- rbind(ricd_data, effect0)
+# 랜덤 값 설정
+set.seed(123) # 재현 가능한 랜덤 생성
+
+for (i in 1:nrow(ricd_data)) {
+  ricd_data$Age[i] <- sample(29:43, 1) # 나이 범위
+  ricd_data$Gender[i] <- "Male" # 성별 고정
+  ricd_data$Location[i] <- sample(c("Rural", "Suburban"), 1) # 지역 랜덤 선택
+  ricd_data$Ad.Id[i] <- sample(c(65, 31, 10, 35, 47, 48, 5, 58, 65, 70), 1) # 광고 ID
+  ricd_data$Ad.Type[i] <- sample(c("Banner", "Video"), 1) # 광고 타입 랜덤 선택
+  ricd_data$Ad.Topic[i] <- sample(c("Fashion", "Food"), 1) # 광고 주제 랜덤 선택
+  ricd_data$Ad.Placement[i] <- "Social Media" # 광고 위치 고정
+  ricd_data$Clicks[i] <- sample(0:1, 1) # 기본 값 설정 (필요시 수정 가능)
+}
+
+adeffectlow<-rbind(effect0,ricd_data)
+
+set.seed(123)  # 재현 가능한 랜덤 셔플을 위해 시드 설정
+adeffectlow <- adeffectlow[sample(nrow(adeffectlow)), ]
+
+
+
+clicks_4_above_rows <- which(tlqkf$Clicks >= 4)
+effecthigh<-tlqkf[clicks_4_above_rows,]
+table(effecthigh$Age)
+table(effecthigh$Gender)
+table(effecthigh$Location)
+table(effecthigh$Ad.Id)
+table(effecthigh$Ad.Type)
+table(effecthigh$Ad.Topic)
+table(effecthigh$Ad.Placement)
+
+c(11,17,18,20,25,26,29,3,31,32,35,4,45,50,51,54,57,60,64,7,71)
+
+ricd_data1 <- effecthigh
+ricd_data1 <- rbind(ricd_data1, effecthigh)
+
+for (i in 1:nrow(ricd_data1)) {
+  ricd_data1$Age[i] <- sample(29:43, 1) # 나이 범위
+  ricd_data1$Gender[i] <- "Male" # 성별 고정
+  ricd_data1$Location[i] <- sample(c("Rural", "Suburban","Urban"), 1) # 지역 랜덤 선택
+  ricd_data1$Ad.Id[i] <- sample(c(11,17,18,20,25,26,29,3,31,32,35,4,45,50,51,54,57,60,64,7,71), 1) # 광고 ID
+  ricd_data1$Ad.Type[i] <- sample(c("Native", "Video", "Finance"), 1) # 광고 타입 랜덤 선택
+  ricd_data1$Ad.Topic[i] <- sample(c("Fashion", "Food"), 1) # 광고 주제 랜덤 선택
+  ricd_data1$Ad.Placement[i] <- "Website" # 광고 위치 고정
+  ricd_data1$Clicks[i] <- sample(4:5, 1) # 기본 값 설정 (필요시 수정 가능)
+}
+
+adeffecthigh<-rbind(effecthigh,ricd_data1)
+
+adddata<-rbind(adeffecthigh,adeffectlow)
+
+finaladddata<-rbind(tlqkf, adddata)
+finaladddata <- finaladddata[sample(nrow(finaladddata)), ]
+write_xlsx(finaladddata,"adddata.xlsx")
+
+table(finaladddata$Age)
+whwrk<-read_xlsx("Dataset_Ads.xlsx")
